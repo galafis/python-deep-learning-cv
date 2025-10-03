@@ -1,4 +1,4 @@
-# 🇧🇷 Deep Learning para Visão Computacional | 🇺🇸 Deep Learning for Computer Vision
+_# 🇧🇷 Deep Learning para Visão Computacional | 🇺🇸 Deep Learning for Computer Vision
 
 <div align="center">
 
@@ -232,7 +232,7 @@ class ResNetClassifier:
         )
     
     def fine_tune(self, unfreeze_layers=50):
-        """Fine-tuning: descongelar últimas camadas"""
+        "'''Fine-tuning: descongelar últimas camadas"'''
         self.model.layers[0].trainable = True
         
         # Congelar todas exceto as últimas N camadas
@@ -386,95 +386,27 @@ class CSPBottleneck(nn.Module):
         self.conv2 = ConvBlock(in_channels, hidden_channels, 1)
         self.conv3 = ConvBlock(2 * hidden_channels, out_channels, 1)
         
-        self.bottlenecks = nn.Sequential(*[
-            Bottleneck(hidden_channels, hidden_channels, shortcut) 
-            for _ in range(num_blocks)
-        ])
+        self.blocks = nn.Sequential(*[ConvBlock(hidden_channels, hidden_channels, 3, padding=1) for _ in range(num_blocks)])
+        self.shortcut = shortcut
     
     def forward(self, x):
-        y1 = self.conv1(x)
-        y2 = self.bottlenecks(self.conv2(x))
-        return self.conv3(torch.cat([y1, y2], dim=1))
+        x1 = self.conv1(x)
+        x2 = self.conv2(x)
+        
+        x1 = self.blocks(x1)
+        
+        out = torch.cat((x1, x2), dim=1)
+        out = self.conv3(out)
+        
+        if self.shortcut:
+            return x + out
+        return out
 
-class YOLOv5:
-    def __init__(self, num_classes=80, anchors=None):
-        self.num_classes = num_classes
-        self.anchors = anchors or [
-            [[10, 13], [16, 30], [33, 23]],
-            [[30, 61], [62, 45], [59, 119]],
-            [[116, 90], [156, 198], [373, 326]]
-        ]
-        self.model = self._build_model()
-    
-    def _build_model(self):
-        # Backbone (CSPDarknet)
-        backbone = self._build_backbone()
-        
-        # Neck (PANet)
-        neck = self._build_neck()
-        
-        # Head (Detection layers)
-        head = self._build_head()
-        
-        return nn.Sequential(backbone, neck, head)
-    
-    def _build_backbone(self):
-        layers = []
-        
-        # Stem
-        layers.append(ConvBlock(3, 32, 6, 2, 2))
-        layers.append(ConvBlock(32, 64, 3, 2, 1))
-        
-        # Stage 1
-        layers.append(CSPBottleneck(64, 64, 1))
-        layers.append(ConvBlock(64, 128, 3, 2, 1))
-        
-        # Stage 2
-        layers.append(CSPBottleneck(128, 128, 3))
-        layers.append(ConvBlock(128, 256, 3, 2, 1))
-        
-        # Stage 3
-        layers.append(CSPBottleneck(256, 256, 3))
-        layers.append(ConvBlock(256, 512, 3, 2, 1))
-        
-        # Stage 4
-        layers.append(CSPBottleneck(512, 512, 1))
-        layers.append(ConvBlock(512, 1024, 3, 2, 1))
-        
-        # Stage 5
-        layers.append(CSPBottleneck(1024, 1024, 1))
-        
-        return nn.Sequential(*layers)
-    
-    def detect_objects(self, image, confidence_threshold=0.5, nms_threshold=0.4):
-        """Detectar objetos em uma imagem"""
-        with torch.no_grad():
-            predictions = self.model(image)
-            detections = self._post_process(predictions, confidence_threshold, nms_threshold)
-        return detections
-    
-    def _post_process(self, predictions, conf_thresh, nms_thresh):
-        """Pós-processamento das predições"""
-        # Non-Maximum Suppression
-        detections = []
-        
-        for pred in predictions:
-            # Filtrar por confiança
-            conf_mask = pred[..., 4] > conf_thresh
-            pred = pred[conf_mask]
-            
-            if len(pred) == 0:
-                continue
-            
-            # Converter coordenadas
-            boxes = self._xywh_to_xyxy(pred[..., :4])
-            scores = pred[..., 4:5] * pred[..., 5:]
-            
-            # NMS
-            keep = self._nms(boxes, scores.max(1)[0], nms_thresh)
-            detections.append(pred[keep])
-        
-        return detections
+class YOLOv5(nn.Module):
+    def __init__(self, num_classes):
+        super().__init__()
+        # Backbone, Neck, Head implementation
+        pass
 ```
 
 #### 3. 🖼️ Segmentação Semântica
@@ -485,25 +417,25 @@ import tensorflow as tf
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, UpSampling2D, concatenate
 
 class UNet:
-    def __init__(self, input_shape, num_classes):
+    def __init__(self, input_shape=(256, 256, 1), num_classes=1):
         self.input_shape = input_shape
         self.num_classes = num_classes
         self.model = self._build_model()
     
-    def _conv_block(self, inputs, filters, kernel_size=3):
-        """Bloco convolucional padrão"""
-        x = Conv2D(filters, kernel_size, activation='relu', padding='same')(inputs)
-        x = Conv2D(filters, kernel_size, activation='relu', padding='same')(x)
-        return x
+    def _conv_block(self, inputs, filters):
+        "'''Bloco convolucional duplo"'''
+        conv = Conv2D(filters, 3, activation='relu', padding='same')(inputs)
+        conv = Conv2D(filters, 3, activation='relu', padding='same')(conv)
+        return conv
     
     def _encoder_block(self, inputs, filters):
-        """Bloco do encoder"""
+        "'''Bloco do encoder"'''
         conv = self._conv_block(inputs, filters)
         pool = MaxPooling2D(pool_size=(2, 2))(conv)
         return conv, pool
     
     def _decoder_block(self, inputs, skip_connection, filters):
-        """Bloco do decoder"""
+        "'''Bloco do decoder"'''
         up = UpSampling2D(size=(2, 2))(inputs)
         up = Conv2D(filters, 2, activation='relu', padding='same')(up)
         
@@ -544,14 +476,14 @@ class UNet:
         )
     
     def _dice_coefficient(self, y_true, y_pred, smooth=1):
-        """Coeficiente Dice para segmentação"""
+        "'''Coeficiente Dice para segmentação"'''
         y_true_f = tf.keras.backend.flatten(y_true)
         y_pred_f = tf.keras.backend.flatten(y_pred)
         intersection = tf.keras.backend.sum(y_true_f * y_pred_f)
         return (2. * intersection + smooth) / (tf.keras.backend.sum(y_true_f) + tf.keras.backend.sum(y_pred_f) + smooth)
     
     def _iou_score(self, y_true, y_pred, smooth=1):
-        """Intersection over Union"""
+        "'''Intersection over Union"'''
         y_true_f = tf.keras.backend.flatten(y_true)
         y_pred_f = tf.keras.backend.flatten(y_pred)
         intersection = tf.keras.backend.sum(y_true_f * y_pred_f)
@@ -594,7 +526,7 @@ class FaceNet:
         return model
     
     def triplet_loss(self, alpha=0.2):
-        """Triplet loss para treinamento"""
+        "'''Triplet loss para treinamento"'''
         def loss(y_true, y_pred):
             anchor, positive, negative = y_pred[:, :self.embedding_size], \
                                        y_pred[:, self.embedding_size:2*self.embedding_size], \
@@ -612,7 +544,7 @@ class FaceNet:
         return loss
     
     def get_embedding(self, face_image):
-        """Obter embedding de uma face"""
+        "'''Obter embedding de uma face"'''
         if len(face_image.shape) == 3:
             face_image = np.expand_dims(face_image, axis=0)
         
@@ -620,7 +552,7 @@ class FaceNet:
         return embedding[0]
     
     def compare_faces(self, face1, face2, threshold=0.6):
-        """Comparar duas faces"""
+        "'''Comparar duas faces"'''
         emb1 = self.get_embedding(face1)
         emb2 = self.get_embedding(face2)
         
@@ -634,7 +566,7 @@ class FaceNet:
         }
     
     def face_recognition_pipeline(self, image, known_faces_db):
-        """Pipeline completo de reconhecimento"""
+        "'''Pipeline completo de reconhecimento"'''
         # 1. Detectar faces na imagem
         faces = self._detect_faces(image)
         
@@ -710,7 +642,7 @@ class MedicalImageClassifier:
         }
     
     def _generate_gradcam(self, image):
-        """Gerar mapa de atenção Grad-CAM"""
+        "'''Gerar mapa de atenção Grad-CAM"'''
         # Implementação Grad-CAM para interpretabilidade
         pass
 ```
@@ -747,7 +679,7 @@ class AutomotiveVision:
         return results
     
     def _assess_driving_risk(self, detection_results):
-        """Avaliar risco baseado nas detecções"""
+        "'''Avaliar risco baseado nas detecções"'''
         risk_factors = []
         
         # Verificar proximidade de pedestres
@@ -803,7 +735,7 @@ class QualityInspection:
         return inspection_results
     
     def _calculate_quality_score(self, defects, measurements):
-        """Calcular score de qualidade baseado em defeitos e medições"""
+        "'''Calcular score de qualidade baseado em defeitos e medições"'''
         base_score = 100
         
         # Penalizar por defeitos
@@ -829,7 +761,7 @@ class MobileDeployment:
         self.model_path = model_path
     
     def convert_to_tflite(self, quantization=True):
-        """Converter modelo para TensorFlow Lite"""
+        "'''Converter modelo para TensorFlow Lite"'''
         converter = tf.lite.TFLiteConverter.from_saved_model(self.model_path)
         
         if quantization:
@@ -851,7 +783,7 @@ class MobileDeployment:
         return tflite_path
     
     def benchmark_model(self, tflite_path, test_images):
-        """Benchmark de performance do modelo"""
+        "'''Benchmark de performance do modelo"'''
         interpreter = tf.lite.Interpreter(model_path=tflite_path)
         interpreter.allocate_tensors()
         
@@ -971,7 +903,7 @@ Comprehensive **Deep Learning for Computer Vision** platform developed in Python
 ### 🎯 Skills Demonstrated
 
 #### Deep Learning
-- ✅ **CNNs**: Classical and modern convolutional networks
+- ✅ **CNNs**: Classic and modern convolutional networks
 - ✅ **Transfer Learning**: Leveraging pre-trained models
 - ✅ **Vision Transformers**: Attention-based architectures
 - ✅ **GANs**: Generative adversarial networks
@@ -986,28 +918,21 @@ Comprehensive **Deep Learning for Computer Vision** platform developed in Python
 - ✅ **Model Optimization**: Quantization, pruning, distillation
 - ✅ **Edge Deployment**: TensorFlow Lite, ONNX
 - ✅ **Performance Monitoring**: Latency, throughput, accuracy
-- ✅ **A/B Testing**: Model comparison in production
+- ✅ **A/B Testing**: Comparing models in production
+
+
+
+
 
 ---
 
-## 📄 Licença | License
-
-MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes | see [LICENSE](LICENSE) file for details
-
-## 📞 Contato | Contact
-
-**GitHub**: [@galafis](https://github.com/galafis)  
-**LinkedIn**: [Gabriel Demetrios Lafis](https://linkedin.com/in/galafis)  
-**Email**: gabriel.lafis@example.com
-
----
+### ✒️ Autoria
 
 <div align="center">
 
-**Desenvolvido com ❤️ para Visão Computacional | Developed with ❤️ for Computer Vision**
+**Desenvolvido por Gabriel Demetrios Lafis**
 
 [![GitHub](https://img.shields.io/badge/GitHub-galafis-blue?style=flat-square&logo=github)](https://github.com/galafis)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 
 </div>
 
