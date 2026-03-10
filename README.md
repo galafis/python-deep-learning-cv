@@ -1,290 +1,142 @@
-# 🧠 Python Deep Learning Cv
+# Deep Learning Computer Vision Framework
 
-> Data Science project - python-deep-learning-cv
+<div align="center">
 
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB.svg)](https://img.shields.io/badge/)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://img.shields.io/badge/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688.svg)](https://img.shields.io/badge/)
-[![NumPy](https://img.shields.io/badge/NumPy-1.26-013243.svg)](https://img.shields.io/badge/)
-[![Pandas](https://img.shields.io/badge/Pandas-2.2-150458.svg)](https://img.shields.io/badge/)
-[![Plotly](https://img.shields.io/badge/Plotly-5.18-3F4F75.svg)](https://img.shields.io/badge/)
-[![scikit--learn](https://img.shields.io/badge/scikit--learn-1.4-F7931E.svg)](https://img.shields.io/badge/)
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.31-FF4B4B.svg)](https://img.shields.io/badge/)
-[![TensorFlow](https://img.shields.io/badge/TensorFlow-2.15-FF6F00.svg)](https://img.shields.io/badge/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-013243?style=for-the-badge&logo=numpy&logoColor=white)
 
-[English](#english) | [Português](#português)
+</div>
+
+**[English](#english)** | **[Portugues (BR)](#portugues-br)**
 
 ---
 
 ## English
 
-### 🎯 Overview
+### Overview
 
-**Python Deep Learning Cv** is a production-grade Python application that showcases modern software engineering practices including clean architecture, comprehensive testing, containerized deployment, and CI/CD readiness.
+A deep learning framework for computer vision built from scratch using NumPy. Implements CNN layers (Conv2D with forward/backward, MaxPool2D, Flatten, Dense), an image augmentation pipeline, and model evaluation with confusion matrix and classification metrics.
 
-The codebase comprises **302 lines** of source code organized across **1 modules**, following industry best practices for maintainability, scalability, and code quality.
-
-### ✨ Key Features
-
-- **⚡ Async API**: High-performance async REST API with FastAPI
-- **📖 Auto-Documentation**: Interactive Swagger UI and ReDoc
-- **✅ Validation**: Pydantic-powered request/response validation
-- **🐳 Containerized**: Docker support for consistent deployment
-
-### 🏗️ Architecture
+### Architecture
 
 ```mermaid
-graph TB
-    subgraph Client["🖥️ Client Layer"]
-        A[REST API Client]
-        B[Swagger UI]
-    end
-    
-    subgraph API["⚡ API Layer"]
-        C[Authentication & Rate Limiting]
-        D[Request Validation]
-        E[API Endpoints]
-    end
-    
-    subgraph ML["🤖 ML Engine"]
-        F[Feature Engineering]
-        G[Model Training]
-        H[Prediction Service]
-        I[Model Registry]
-    end
-    
-    subgraph Data["💾 Data Layer"]
-        J[(Database)]
-        K[Cache Layer]
-        L[Data Pipeline]
-    end
-    
-    A --> C
-    B --> C
-    C --> D --> E
-    E --> H
-    E --> J
-    H --> F --> G
-    G --> I
-    I --> H
-    E --> K
-    L --> J
-    
-    style Client fill:#e1f5fe
-    style API fill:#f3e5f5
-    style ML fill:#e8f5e9
-    style Data fill:#fff3e0
+graph TD
+    A[Input Image] --> B[Conv2D Layer]
+    B --> C[ReLU Activation]
+    C --> D[MaxPool2D]
+    D --> E[Conv2D Layer]
+    E --> F[ReLU Activation]
+    F --> G[MaxPool2D]
+    G --> H[Flatten]
+    H --> I[Dense Layer]
+    I --> J[Output Predictions]
+    J --> K[Model Evaluator]
+    K --> L[Confusion Matrix]
+    K --> M[Precision / Recall / F1]
 ```
 
-### 🚀 Quick Start
+### Data Pipeline
 
-#### Prerequisites
+```mermaid
+flowchart LR
+    subgraph Augmentation
+        A1[Original Images] --> A2[Horizontal Flip]
+        A2 --> A3[Brightness Adjustment]
+        A3 --> A4[Random Noise]
+        A4 --> A5[Random Crop]
+    end
+    subgraph Training
+        A5 --> B1[Forward Pass - CNN]
+        B1 --> B2[Loss Computation]
+        B2 --> B3[Backward Pass]
+        B3 --> B4[Weight Update]
+    end
+    subgraph Evaluation
+        B4 --> C1[Predictions]
+        C1 --> C2[Confusion Matrix]
+        C2 --> C3[Classification Report]
+    end
+```
 
-- Python 3.12+
-- pip (Python package manager)
+### Features
 
-#### Installation
+- **Conv2D Layer**: 2D convolution with configurable kernel size, stride, padding, and full backpropagation
+- **MaxPool2D**: Max pooling with backward pass gradient routing
+- **Image Augmentation**: Flip, brightness, noise, crop, center crop, normalization
+- **Evaluation**: Confusion matrix, per-class precision/recall/F1, classification report
+
+### Usage
+
+```python
+from src.cnn_layers import Conv2D, MaxPool2D, Flatten, Dense, ReLU
+from src.augmentation import ImageAugmentor
+from src.evaluation import ModelEvaluator
+
+# Build CNN architecture
+conv1 = Conv2D(1, 8, kernel_size=3, padding=1, seed=42)
+relu = ReLU()
+pool = MaxPool2D(pool_size=2)
+flatten = Flatten()
+
+# Augment training data
+augmentor = ImageAugmentor(seed=42)
+augmented = augmentor.augment(image)
+
+# Evaluate model
+evaluator = ModelEvaluator()
+print(evaluator.classification_report(y_true, y_pred, class_names))
+```
+
+### Running Tests
 
 ```bash
-# Clone the repository
-git clone https://github.com/galafis/python-deep-learning-cv.git
-cd python-deep-learning-cv
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+pytest tests/ -v
 ```
 
-#### Running
-
-```bash
-# Run the application
-python src/main.py
-```
-
-### 📁 Project Structure
-
-```
-python-deep-learning-cv/
-├── src/          # Source code
-│   └── main.py
-├── tests/         # Test suite
-│   ├── __init__.py
-│   └── test_main.py
-├── Dockerfile
-├── LICENSE
-├── README.md
-└── requirements.txt
-```
-
-### 🛠️ Tech Stack
-
-| Technology | Description | Role |
-|------------|-------------|------|
-| **Python** | Core Language | Primary |
-| **Docker** | Containerization platform | Framework |
-| **FastAPI** | High-performance async web framework | Framework |
-| **NumPy** | Numerical computing | Framework |
-| **Pandas** | Data manipulation library | Framework |
-| **Plotly** | Interactive visualization | Framework |
-| **scikit-learn** | Machine learning library | Framework |
-| **Streamlit** | Data app framework | Framework |
-| **TensorFlow** | Deep learning framework | Framework |
-
-### 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
-
-1. Fork the project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### 👤 Author
+### Author
 
 **Gabriel Demetrios Lafis**
-- GitHub: [@galafis](https://github.com/galafis)
-- LinkedIn: [Gabriel Demetrios Lafis](https://linkedin.com/in/gabriel-demetrios-lafis)
+- [GitHub](https://github.com/galafis)
+- [LinkedIn](https://www.linkedin.com/in/gabriel-demetrios-lafis-62197711b)
 
 ---
 
-## Português
+## Portugues BR
 
-### 🎯 Visão Geral
+### Visao Geral
 
-**Python Deep Learning Cv** é uma aplicação Python de nível profissional que demonstra práticas modernas de engenharia de software, incluindo arquitetura limpa, testes abrangentes, implantação containerizada e prontidão para CI/CD.
+Um framework de deep learning para visao computacional construido do zero usando NumPy. Implementa camadas CNN (Conv2D com forward/backward, MaxPool2D, Flatten, Dense), pipeline de aumento de imagens e avaliacao de modelo com matriz de confusao e metricas de classificacao.
 
-A base de código compreende **302 linhas** de código-fonte organizadas em **1 módulos**, seguindo as melhores práticas do setor para manutenibilidade, escalabilidade e qualidade de código.
-
-### ✨ Funcionalidades Principais
-
-- **⚡ Async API**: High-performance async REST API with FastAPI
-- **📖 Auto-Documentation**: Interactive Swagger UI and ReDoc
-- **✅ Validation**: Pydantic-powered request/response validation
-- **🐳 Containerized**: Docker support for consistent deployment
-
-### 🏗️ Arquitetura
+### Arquitetura
 
 ```mermaid
-graph TB
-    subgraph Client["🖥️ Client Layer"]
-        A[REST API Client]
-        B[Swagger UI]
-    end
-    
-    subgraph API["⚡ API Layer"]
-        C[Authentication & Rate Limiting]
-        D[Request Validation]
-        E[API Endpoints]
-    end
-    
-    subgraph ML["🤖 ML Engine"]
-        F[Feature Engineering]
-        G[Model Training]
-        H[Prediction Service]
-        I[Model Registry]
-    end
-    
-    subgraph Data["💾 Data Layer"]
-        J[(Database)]
-        K[Cache Layer]
-        L[Data Pipeline]
-    end
-    
-    A --> C
-    B --> C
-    C --> D --> E
-    E --> H
-    E --> J
-    H --> F --> G
-    G --> I
-    I --> H
-    E --> K
-    L --> J
-    
-    style Client fill:#e1f5fe
-    style API fill:#f3e5f5
-    style ML fill:#e8f5e9
-    style Data fill:#fff3e0
+graph TD
+    A[Imagem de Entrada] --> B[Camada Conv2D]
+    B --> C[Ativacao ReLU]
+    C --> D[MaxPool2D]
+    D --> E[Flatten]
+    E --> F[Camada Densa]
+    F --> G[Predicoes]
+    G --> H[Avaliacao]
+    H --> I[Matriz de Confusao]
+    H --> J[Metricas por Classe]
 ```
 
-### 🚀 Início Rápido
+### Funcionalidades
 
-#### Prerequisites
+- **Camada Conv2D**: Convolucao 2D com kernel, stride, padding configuraveis e retropropagacao completa
+- **MaxPool2D**: Pooling maximo com roteamento de gradiente
+- **Aumento de Imagens**: Espelhamento, brilho, ruido, recorte, normalizacao
+- **Avaliacao**: Matriz de confusao, precisao/recall/F1 por classe
 
-- Python 3.12+
-- pip (Python package manager)
-
-#### Installation
+### Executando os Testes
 
 ```bash
-# Clone the repository
-git clone https://github.com/galafis/python-deep-learning-cv.git
-cd python-deep-learning-cv
-
-# Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
+pytest tests/ -v
 ```
 
-#### Running
+---
 
-```bash
-# Run the application
-python src/main.py
-```
+## License
 
-### 📁 Estrutura do Projeto
-
-```
-python-deep-learning-cv/
-├── src/          # Source code
-│   └── main.py
-├── tests/         # Test suite
-│   ├── __init__.py
-│   └── test_main.py
-├── Dockerfile
-├── LICENSE
-├── README.md
-└── requirements.txt
-```
-
-### 🛠️ Stack Tecnológica
-
-| Tecnologia | Descrição | Papel |
-|------------|-----------|-------|
-| **Python** | Core Language | Primary |
-| **Docker** | Containerization platform | Framework |
-| **FastAPI** | High-performance async web framework | Framework |
-| **NumPy** | Numerical computing | Framework |
-| **Pandas** | Data manipulation library | Framework |
-| **Plotly** | Interactive visualization | Framework |
-| **scikit-learn** | Machine learning library | Framework |
-| **Streamlit** | Data app framework | Framework |
-| **TensorFlow** | Deep learning framework | Framework |
-
-### 🤝 Contribuindo
-
-Contribuições são bem-vindas! Sinta-se à vontade para enviar um Pull Request.
-
-### 📄 Licença
-
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
-
-### 👤 Autor
-
-**Gabriel Demetrios Lafis**
-- GitHub: [@galafis](https://github.com/galafis)
-- LinkedIn: [Gabriel Demetrios Lafis](https://linkedin.com/in/gabriel-demetrios-lafis)
+MIT License - see [LICENSE](LICENSE) for details.
